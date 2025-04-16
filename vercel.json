@@ -14,5 +14,8 @@
       "src": "/(.*)",
       "dest": "client/build/$1"
     }
-  ]
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://cafe-manager-backend.onrender.com"
+  }
 }
