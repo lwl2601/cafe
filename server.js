@@ -1,11 +1,17 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Client, GatewayIntentBits } = require('discord.js');
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
+
+// PostgreSQL setup
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Discord client setup
 const discordClient = new Client({
@@ -16,11 +22,11 @@ const discordClient = new Client({
 });
 
 // Discord bot token and channel ID
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN || 'YOUR_BOT_TOKEN'; // Use variável de ambiente
-const CHANNEL_ID = 'NHZwYaqr'; // ID do canal do Discord
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
 
 // Conectar ao Discord apenas se o token estiver disponível
-if (DISCORD_TOKEN && DISCORD_TOKEN !== 'YOUR_BOT_TOKEN') {
+if (DISCORD_TOKEN) {
   discordClient.login(DISCORD_TOKEN).catch(error => {
     console.error('Erro ao conectar ao Discord:', error);
   });
@@ -36,25 +42,22 @@ discordClient.on('ready', () => {
 app.use(cors());
 app.use(bodyParser.json());
 
-// Database setup
-const db = new sqlite3.Database('./cafe.db', (err) => {
-  if (err) {
-    console.error('Error opening database:', err);
-  } else {
-    console.log('Connected to the SQLite database');
-    createTables();
-  }
-});
-
 // Create tables
-function createTables() {
-  db.run(`CREATE TABLE IF NOT EXISTS contributors (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    date TEXT NOT NULL,
-    item TEXT NOT NULL,
-    quantity INTEGER NOT NULL
-  )`);
+async function createTables() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS contributors (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        date TEXT NOT NULL,
+        item TEXT NOT NULL,
+        quantity INTEGER NOT NULL
+      )
+    `);
+    console.log('Tabelas criadas com sucesso');
+  } catch (err) {
+    console.error('Erro ao criar tabelas:', err);
+  }
 }
 
 // Função para enviar mensagem no Discord
@@ -78,29 +81,26 @@ async function sendDiscordMessage(message) {
 }
 
 // API Routes
-app.get('/api/contributors', (req, res) => {
-  db.all('SELECT * FROM contributors ORDER BY date DESC', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
+app.get('/api/contributors', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM contributors ORDER BY date DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/contributors', (req, res) => {
+app.post('/api/contributors', async (req, res) => {
   const { name, date, item, quantity } = req.body;
-  db.run(
-    'INSERT INTO contributors (name, date, item, quantity) VALUES (?, ?, ?, ?)',
-    [name, date, item, quantity],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ id: this.lastID });
-    }
-  );
+  try {
+    const result = await pool.query(
+      'INSERT INTO contributors (name, date, item, quantity) VALUES ($1, $2, $3, $4) RETURNING id',
+      [name, date, item, quantity]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/notify-next', async (req, res) => {
@@ -118,17 +118,16 @@ app.post('/api/notify-next', async (req, res) => {
   }
 });
 
-app.delete('/api/contributors/:id', (req, res) => {
+app.delete('/api/contributors/:id', async (req, res) => {
   const id = req.params.id;
-  db.run('DELETE FROM contributors WHERE id = ?', id, (err) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
+  try {
+    await pool.query('DELETE FROM contributors WHERE id = $1', [id]);
     res.json({ message: 'Deleted successfully' });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-}); 
+});
