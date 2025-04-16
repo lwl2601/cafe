@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 
 function App() {
@@ -7,12 +7,12 @@ function App() {
     name: '',
     date: new Date().toISOString().split('T')[0],
     item: 'cafe',
-    quantity: 1
+    quantity: 1,
   });
 
   const [stats, setStats] = useState({
-    cafe: { total: 0, thisMonth: 0 },
-    filtro: { total: 0, thisMonth: 0 }
+    cafe: {total: 0, thisMonth: 0},
+    filtro: {total: 0, thisMonth: 0},
   });
 
   const [showStats, setShowStats] = useState(false);
@@ -20,25 +20,25 @@ function App() {
 
   const initialLists = {
     cafe: [
-      { name: 'André', current: true },
-      { name: 'José', current: false },
-      { name: 'Léo', current: false },
-      { name: 'Carlos', current: false },
-      { name: 'Kauan', current: false },
-      { name: 'Mateus', current: false },
-      { name: 'Henrique', current: false },
-      { name: 'João', current: false }
+      {name: 'André', current: true},
+      {name: 'José', current: false},
+      {name: 'Léo', current: false},
+      {name: 'Carlos', current: false},
+      {name: 'Kauan', current: false},
+      {name: 'Mateus', current: false},
+      {name: 'Henrique', current: false},
+      {name: 'João', current: false},
     ],
     filtro: [
-      { name: 'André', current: false },
-      { name: 'José', current: false },
-      { name: 'Léo', current: false },
-      { name: 'Carlos', current: false },
-      { name: 'Kauan', current: false },
-      { name: 'Henrique', current: true },
-      { name: 'Mateus', current: false },
-      { name: 'João', current: false }
-    ]
+      {name: 'André', current: false},
+      {name: 'José', current: false},
+      {name: 'Léo', current: false},
+      {name: 'Carlos', current: false},
+      {name: 'Kauan', current: false},
+      {name: 'Henrique', current: true},
+      {name: 'Mateus', current: false},
+      {name: 'João', current: false},
+    ],
   };
 
   const [lists, setLists] = useState(initialLists);
@@ -50,7 +50,9 @@ function App() {
 
   const fetchContributors = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/contributors');
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/contributors`,
+      );
       const data = await response.json();
       setContributors(data);
     } catch (error) {
@@ -64,8 +66,8 @@ function App() {
     const thisYear = now.getFullYear();
 
     const newStats = {
-      cafe: { total: 0, thisMonth: 0 },
-      filtro: { total: 0, thisMonth: 0 }
+      cafe: {total: 0, thisMonth: 0},
+      filtro: {total: 0, thisMonth: 0},
     };
 
     contributors.forEach(contributor => {
@@ -86,78 +88,89 @@ function App() {
     setStats(newStats);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/contributors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/contributors`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
         },
-        body: JSON.stringify(formData),
-      });
+      );
       if (response.ok) {
         fetchContributors();
         setFormData({
           name: '',
           date: new Date().toISOString().split('T')[0],
           item: 'cafe',
-          quantity: 1
+          quantity: 1,
         });
       }
     } catch (error) {
-      console.error('Error adding contributor:', error);
+      console.error('Error submitting contribution:', error);
     }
     setShowForm(false);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async id => {
     try {
-      const response = await fetch(`http://localhost:5000/api/contributors/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/contributors/${id}`,
+        {
+          method: 'DELETE',
+        },
+      );
       if (response.ok) {
         fetchContributors();
       }
     } catch (error) {
-      console.error('Error deleting contributor:', error);
+      console.error('Error deleting contribution:', error);
     }
   };
 
-  const moveNext = async (type) => {
-    const newLists = { ...lists };
-    const currentIndex = newLists[type].findIndex(item => item.current);
-    
-    if (currentIndex !== -1) {
-      const currentPerson = newLists[type][currentIndex].name;
-      newLists[type][currentIndex].current = false;
-      const nextIndex = (currentIndex + 1) % newLists[type].length;
-      newLists[type][nextIndex].current = true;
-      const nextPerson = newLists[type][nextIndex].name;
-      
-      setLists(newLists);
+  const moveNext = async type => {
+    const currentList = [...lists[type]];
+    const currentIndex = currentList.findIndex(person => person.current);
+    const nextIndex = (currentIndex + 1) % currentList.length;
 
-      try {
-        await fetch('http://localhost:5000/api/notify-next', {
+    currentList[currentIndex].current = false;
+    currentList[nextIndex].current = true;
+
+    setLists(prev => ({
+      ...prev,
+      [type]: currentList,
+    }));
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/notify-next`,
+        {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             type,
-            currentPerson,
-            nextPerson
+            currentPerson: currentList[currentIndex].name,
+            nextPerson: currentList[nextIndex].name,
           }),
-        });
-      } catch (error) {
-        console.error('Erro ao enviar notificação:', error);
+        },
+      );
+      if (!response.ok) {
+        console.error('Error sending notification');
       }
+    } catch (error) {
+      console.error('Error sending notification:', error);
     }
   };
 
   const calculateContributions = (name, type) => {
-    return contributors.filter(contributor => 
-      contributor.name === name && contributor.item === type
+    return contributors.filter(
+      contributor => contributor.name === name && contributor.item === type,
     ).length;
   };
 
@@ -174,8 +187,8 @@ function App() {
             <h2>Lista do Café</h2>
             <div className="list-content">
               {lists.cafe.map((person, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`list-item ${person.current ? 'current' : ''}`}
                 >
                   <div className="person-info">
@@ -184,7 +197,9 @@ function App() {
                       {calculateContributions(person.name, 'cafe')}
                     </span>
                   </div>
-                  {person.current && <span className="current-marker">👈 Próximo </span>}
+                  {person.current && (
+                    <span className="current-marker">👈 Próximo </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -197,8 +212,8 @@ function App() {
             <h2>Lista do Filtro</h2>
             <div className="list-content">
               {lists.filtro.map((person, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`list-item ${person.current ? 'current' : ''}`}
                 >
                   <div className="person-info">
@@ -207,7 +222,9 @@ function App() {
                       {calculateContributions(person.name, 'filtro')}
                     </span>
                   </div>
-                  {person.current && <span className="current-marker">👈 Próximo</span>}
+                  {person.current && (
+                    <span className="current-marker">👈 Próximo</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -217,7 +234,10 @@ function App() {
           </section>
 
           <div className="buttons">
-            <button className="stats-button" onClick={() => setShowStats(!showStats)}>
+            <button
+              className="stats-button"
+              onClick={() => setShowStats(!showStats)}
+            >
               <i className="fas fa-chart-bar"></i> Estatísticas
             </button>
           </div>
@@ -226,7 +246,10 @@ function App() {
             <div className="stats-container">
               <div className="stats-header">
                 <h2>Estatísticas</h2>
-                <button className="close-button" onClick={() => setShowStats(false)}>
+                <button
+                  className="close-button"
+                  onClick={() => setShowStats(false)}
+                >
                   <i className="fas fa-times"></i>
                 </button>
               </div>
@@ -258,19 +281,25 @@ function App() {
 
         <section className="history-section">
           <h2>Histórico de Contribuições</h2>
-          
+
           <form onSubmit={handleSubmit} className="contribution-form">
             <div className="form-group">
               <label>Usuário:</label>
               <select
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => setFormData({...formData, name: e.target.value})}
                 required
                 className="form-select"
               >
                 <option value="">Selecione um usuário</option>
-                {[...new Set([...lists.cafe, ...lists.filtro].map(person => person.name))].map(name => (
-                  <option key={name} value={name}>{name}</option>
+                {[
+                  ...new Set(
+                    [...lists.cafe, ...lists.filtro].map(person => person.name),
+                  ),
+                ].map(name => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -279,7 +308,7 @@ function App() {
               <input
                 type="date"
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={e => setFormData({...formData, date: e.target.value})}
                 required
               />
             </div>
@@ -287,7 +316,7 @@ function App() {
               <label>Item:</label>
               <select
                 value={formData.item}
-                onChange={(e) => setFormData({ ...formData, item: e.target.value })}
+                onChange={e => setFormData({...formData, item: e.target.value})}
                 required
                 className="form-select"
               >
@@ -300,16 +329,20 @@ function App() {
               <input
                 type="number"
                 value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                onChange={e =>
+                  setFormData({...formData, quantity: parseInt(e.target.value)})
+                }
                 min="1"
                 required
               />
             </div>
-            <button type="submit" className="submit-button">Adicionar ao Histórico</button>
+            <button type="submit" className="submit-button">
+              Adicionar ao Histórico
+            </button>
           </form>
 
           <div className="contributions-list">
-            {contributors.map((contributor) => (
+            {contributors.map(contributor => (
               <div key={contributor.id} className="contribution-card">
                 <div className="contribution-info">
                   <h3>{contributor.name}</h3>
@@ -332,4 +365,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
