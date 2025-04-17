@@ -236,7 +236,6 @@ function App() {
 
   const ListItem = ({person, isCurrent, type}) => (
     <div className={`list-item ${isCurrent ? 'current' : ''}`}>
-      {isCurrent && <div className="current-marker">👈 Próximo</div>}
       <div className="person-info">
         <div className="person-name">{person.name}</div>
         <div className="contribution-count">
