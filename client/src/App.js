@@ -46,17 +46,21 @@ function App() {
   useEffect(() => {
     fetchContributors();
     calculateStats();
-  }, [contributors]);
+  }, []);
 
   const fetchContributors = async () => {
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/contributors`,
       );
+      if (!response.ok) {
+        throw new Error('Erro ao buscar contributors');
+      }
       const data = await response.json();
-      setContributors(data);
+      setContributors(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching contributors:', error);
+      setContributors([]);
     }
   };
 
