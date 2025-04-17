@@ -1,22 +1,31 @@
 {
   "version": 2,
+  "env": {
+    "DB_USER": "@db_user",
+    "DB_PASSWORD": "@db_password",
+    "DB_HOST": "@db_host",
+    "DB_PORT": "@db_port",
+    "DB_NAME": "@db_name"
+  },
   "builds": [
+    {
+      "src": "server/**/*.js",
+      "use": "@vercel/node"
+    },
     {
       "src": "client/package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build",
-        "buildCommand": "npm run build"
-      }
+      "config": {"distDir": "build"}
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "server/api/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "client/build/$1"
+      "dest": "client/$1"
     }
-  ],
-  "env": {
-    "REACT_APP_API_URL": "https://cafe-manager-backend.onrender.com"
-  }
+  ]
 }
