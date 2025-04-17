@@ -142,19 +142,23 @@ function App() {
           body: JSON.stringify(formData),
         },
       );
+
       if (response.ok) {
-        fetchContributors();
+        // Atualiza a lista de contribuidores
+        await fetchContributors();
+        // Limpa o formulário
         setFormData({
           name: '',
           date: new Date().toISOString().split('T')[0],
           item: 'cafe',
           quantity: 1,
         });
+        // Atualiza as estatísticas
+        calculateStats();
       }
     } catch (error) {
-      console.error('Error submitting contribution:', error);
+      console.error('Erro ao adicionar contribuição:', error);
     }
-    setShowForm(false);
   };
 
   const handleDelete = async id => {
@@ -230,6 +234,18 @@ function App() {
     ).length;
   };
 
+  const ListItem = ({person, isCurrent, type}) => (
+    <div className={`list-item ${isCurrent ? 'current' : ''}`}>
+      {isCurrent && <div className="current-marker">👈 Próximo</div>}
+      <div className="person-info">
+        <div className="person-name">{person.name}</div>
+        <div className="contribution-count">
+          Contribuições: {calculateContributions(person.name, type)}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -243,20 +259,12 @@ function App() {
             <h2>Lista do Café</h2>
             <div className="list-content">
               {lists.cafe.map((person, index) => (
-                <div
+                <ListItem
                   key={index}
-                  className={`list-item ${person.current ? 'current' : ''}`}
-                >
-                  <div className="person-info">
-                    <span className="person-name">{person.name}</span>
-                    <span className="contribution-count">
-                      {calculateContributions(person.name, 'cafe')}
-                    </span>
-                  </div>
-                  {person.current && (
-                    <span className="current-marker">👈 Próximo </span>
-                  )}
-                </div>
+                  person={person}
+                  isCurrent={person.current}
+                  type="cafe"
+                />
               ))}
             </div>
             <button className="next-button" onClick={() => moveNext('cafe')}>
@@ -268,20 +276,12 @@ function App() {
             <h2>Lista do Filtro</h2>
             <div className="list-content">
               {lists.filtro.map((person, index) => (
-                <div
+                <ListItem
                   key={index}
-                  className={`list-item ${person.current ? 'current' : ''}`}
-                >
-                  <div className="person-info">
-                    <span className="person-name">{person.name}</span>
-                    <span className="contribution-count">
-                      {calculateContributions(person.name, 'filtro')}
-                    </span>
-                  </div>
-                  {person.current && (
-                    <span className="current-marker">👈 Próximo</span>
-                  )}
-                </div>
+                  person={person}
+                  isCurrent={person.current}
+                  type="filtro"
+                />
               ))}
             </div>
             <button className="next-button" onClick={() => moveNext('filtro')}>

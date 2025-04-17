@@ -39,9 +39,16 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(52, 152, 219, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(44, 62, 80, 0.1) 0%, transparent 50%);
+  background: radial-gradient(
+      circle at 20% 20%,
+      rgba(52, 152, 219, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(44, 62, 80, 0.1) 0%,
+      transparent 50%
+    );
   z-index: -1;
 }
 
@@ -105,54 +112,42 @@ body {
 
 .list-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--border-color);
-  transition: var(--transition);
-}
-
-.list-item:last-child {
-  border-bottom: none;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
 }
 
 .list-item.current {
-  background: rgba(52, 152, 219, 0.1);
-  border-radius: 6px;
+  background-color: #e9ecef;
+  border-left: 4px solid #0d6efd;
+}
+
+.current-marker {
+  color: #0d6efd;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 14px;
 }
 
 .person-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  flex: 1;
-}
-
-.contribution-count {
-  background: var(--secondary-color);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  min-width: 32px;
-  text-align: center;
-  order: -1;
+  width: 100%;
 }
 
 .person-name {
   font-weight: 500;
-  color: var(--text-color);
-  flex: 1;
+  margin-bottom: 5px;
 }
 
-.current-marker {
-  color: var(--secondary-color);
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-left: auto;
+.contribution-count {
+  font-size: 12px;
+  color: #6c757d;
 }
 
 .lists-container {
@@ -218,7 +213,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.2) 50%, transparent 55%);
+  background: linear-gradient(
+    45deg,
+    transparent 45%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 55%
+  );
   animation: shine 3s infinite;
 }
 
@@ -336,7 +336,11 @@ body {
 /* Botão Enviar */
 .submit-button {
   composes: action-button;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   padding: 1rem 2rem;
   border: none;
@@ -363,7 +367,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   animation: shine 2s infinite;
 }
 
@@ -478,24 +487,43 @@ body {
 
 /* Animações */
 @keyframes shine {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes checkmark {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 .list-item-actions {
@@ -618,7 +646,11 @@ body {
   transform: translateX(-50%);
   width: 100px;
   height: 3px;
-  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    to right,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border-radius: 3px;
 }
 
@@ -967,8 +999,8 @@ body {
   .search-filters {
     flex-direction: column;
   }
-  
+
   .contribution-form {
     padding: 1.5rem;
   }
-} 
+}
