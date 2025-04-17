@@ -18,9 +18,9 @@ function App() {
   const [showStats, setShowStats] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const initialLists = {
+  const [lists, setLists] = useState({
     cafe: [
-      {name: 'André', current: true},
+      {name: 'André', current: false},
       {name: 'José', current: false},
       {name: 'Léo', current: false},
       {name: 'Carlos', current: false},
@@ -35,16 +35,15 @@ function App() {
       {name: 'Léo', current: false},
       {name: 'Carlos', current: false},
       {name: 'Kauan', current: false},
-      {name: 'Henrique', current: true},
+      {name: 'Henrique', current: false},
       {name: 'Mateus', current: false},
       {name: 'João', current: false},
     ],
-  };
-
-  const [lists, setLists] = useState(initialLists);
+  });
 
   useEffect(() => {
     fetchContributors();
+    fetchLists();
     calculateStats();
   }, []);
 
@@ -61,6 +60,42 @@ function App() {
     } catch (error) {
       console.error('Error fetching contributors:', error);
       setContributors([]);
+    }
+  };
+
+  const fetchLists = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/lists`,
+      );
+      if (!response.ok) {
+        throw new Error('Erro ao buscar lists');
+      }
+      const data = await response.json();
+
+      // Inicializa as listas com os dados do banco
+      const newLists = {
+        cafe: lists.cafe.map(person => ({
+          ...person,
+          current: data.some(
+            item =>
+              item.type === 'cafe' && item.name === person.name && item.current,
+          ),
+        })),
+        filtro: lists.filtro.map(person => ({
+          ...person,
+          current: data.some(
+            item =>
+              item.type === 'filtro' &&
+              item.name === person.name &&
+              item.current,
+          ),
+        })),
+      };
+
+      setLists(newLists);
+    } catch (error) {
+      console.error('Error fetching lists:', error);
     }
   };
 
@@ -141,6 +176,7 @@ function App() {
     const currentIndex = currentList.findIndex(person => person.current);
     const nextIndex = (currentIndex + 1) % currentList.length;
 
+    // Atualiza o estado local
     currentList[currentIndex].current = false;
     currentList[nextIndex].current = true;
 
@@ -149,26 +185,34 @@ function App() {
       [type]: currentList,
     }));
 
+    // Salva no banco de dados
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/notify-next`,
-        {
+      await Promise.all([
+        fetch(`${process.env.REACT_APP_API_URL}/api/lists`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             type,
-            currentPerson: currentList[currentIndex].name,
-            nextPerson: currentList[nextIndex].name,
+            name: currentList[currentIndex].name,
+            current: false,
           }),
-        },
-      );
-      if (!response.ok) {
-        console.error('Error sending notification');
-      }
+        }),
+        fetch(`${process.env.REACT_APP_API_URL}/api/lists`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type,
+            name: currentList[nextIndex].name,
+            current: true,
+          }),
+        }),
+      ]);
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Error updating lists:', error);
     }
   };
 
