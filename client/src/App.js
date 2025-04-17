@@ -43,6 +43,11 @@ function App() {
 
   const [nextPerson, setNextPerson] = useState({cafe: '', filtro: ''});
 
+  const [currentIndexes, setCurrentIndexes] = useState(() => {
+    const saved = localStorage.getItem('currentIndexes');
+    return saved ? JSON.parse(saved) : {cafe: 0, filtro: 0};
+  });
+
   useEffect(() => {
     fetchContributors();
     fetchLists();
@@ -234,16 +239,35 @@ function App() {
     ).length;
   };
 
-  const ListItem = ({person, isCurrent, type}) => (
-    <div className={`list-item ${isCurrent ? 'current' : ''}`}>
-      <div className="person-info">
-        <div className="person-name">{person.name}</div>
-        <div className="contribution-count">
-          Contribuições: {calculateContributions(person.name, type)}
+  const handleNext = listType => {
+    setCurrentIndexes(prev => {
+      const newIndexes = {
+        ...prev,
+        [listType]: (prev[listType] + 1) % lists[listType].length,
+      };
+      localStorage.setItem('currentIndexes', JSON.stringify(newIndexes));
+      return newIndexes;
+    });
+  };
+
+  const ListItem = ({person, index, type}) => {
+    const isCurrent = index === currentIndexes[type];
+    return (
+      <div className={`list-item ${isCurrent ? 'current' : ''}`}>
+        <div className="person-info">
+          <div className="person-name">{person.name}</div>
+          <div className="contribution-count">
+            Contribuições: {calculateContributions(person.name, type)}
+          </div>
         </div>
+        {isCurrent && (
+          <button className="next-button" onClick={() => handleNext(type)}>
+            Próximo ➔
+          </button>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="app-container">
@@ -261,14 +285,11 @@ function App() {
                 <ListItem
                   key={index}
                   person={person}
-                  isCurrent={person.current}
+                  index={index}
                   type="cafe"
                 />
               ))}
             </div>
-            <button className="next-button" onClick={() => moveNext('cafe')}>
-              <i className="fas fa-arrow-right"></i> Próximo: {nextPerson.cafe}
-            </button>
           </section>
 
           <section className="list-section filter-list">
@@ -278,15 +299,11 @@ function App() {
                 <ListItem
                   key={index}
                   person={person}
-                  isCurrent={person.current}
+                  index={index}
                   type="filtro"
                 />
               ))}
             </div>
-            <button className="next-button" onClick={() => moveNext('filtro')}>
-              <i className="fas fa-arrow-right"></i> Próximo:{' '}
-              {nextPerson.filtro}
-            </button>
           </section>
 
           <div className="buttons">
