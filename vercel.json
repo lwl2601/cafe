@@ -1,11 +1,7 @@
 {
   "version": 2,
   "env": {
-    "DB_USER": "@db_user",
-    "DB_PASSWORD": "@db_password",
-    "DB_HOST": "@db_host",
-    "DB_PORT": "@db_port",
-    "DB_NAME": "@db_name"
+    "REACT_APP_API_URL": "https://cafe-manager-backend.onrender.com"
   },
   "builds": [
     {
