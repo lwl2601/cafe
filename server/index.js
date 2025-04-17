@@ -57,16 +57,21 @@ app.get('/api/contributors', async (req, res) => {
 
 // Rota POST /api/contributors
 app.post('/api/contributors', async (req, res) => {
+  console.log('Recebendo requisição POST /api/contributors:', req.body);
   const {name, date, item, quantity} = req.body;
   try {
+    console.log('Inserindo no banco:', {name, date, item, quantity});
     const result = await pool.query(
       'INSERT INTO contributors (name, date, item, quantity) VALUES ($1, $2, $3, $4) RETURNING *',
       [name, date, item, quantity],
     );
+    console.log('Resultado da inserção:', result.rows[0]);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error('Erro ao criar contributor:', err);
-    res.status(500).json({error: 'Erro interno do servidor'});
+    res
+      .status(500)
+      .json({error: 'Erro interno do servidor', details: err.message});
   }
 });
 

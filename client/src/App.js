@@ -41,6 +41,8 @@ function App() {
     ],
   });
 
+  const [nextPerson, setNextPerson] = useState({cafe: '', filtro: ''});
+
   useEffect(() => {
     fetchContributors();
     fetchLists();
@@ -185,6 +187,12 @@ function App() {
       [type]: currentList,
     }));
 
+    // Atualiza o nome da próxima pessoa
+    setNextPerson(prev => ({
+      ...prev,
+      [type]: currentList[nextIndex].name,
+    }));
+
     // Salva no banco de dados
     try {
       await Promise.all([
@@ -252,7 +260,7 @@ function App() {
               ))}
             </div>
             <button className="next-button" onClick={() => moveNext('cafe')}>
-              <i className="fas fa-arrow-right"></i> Próximo
+              <i className="fas fa-arrow-right"></i> Próximo: {nextPerson.cafe}
             </button>
           </section>
 
@@ -277,7 +285,8 @@ function App() {
               ))}
             </div>
             <button className="next-button" onClick={() => moveNext('filtro')}>
-              <i className="fas fa-arrow-right"></i> Próximo
+              <i className="fas fa-arrow-right"></i> Próximo:{' '}
+              {nextPerson.filtro}
             </button>
           </section>
 
